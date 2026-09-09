@@ -2327,7 +2327,7 @@
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-content">
-                <a href="{{ "examples/" | absURL }}" style="color:#4ecdc4;text-decoration:none;font-size:12px;display:inline-block;margin-bottom:10px;">← All Examples</a>
+                <a href="{{ "examples/" | relURL }}" style="color:#4ecdc4;text-decoration:none;font-size:12px;display:inline-block;margin-bottom:10px;">← All Examples</a>
                 <h1>📊 {{ .Title }}</h1>
                 <p class="subtitle">{{ with .Description }}{{ . }}{{ else }}Drag points to reclassify • Right-click to change color/shape{{ end }}</p>
                 
@@ -2682,8 +2682,8 @@
     </div>
     
     <script>
-        const DATASET_URL = "{{ .Params.dataset_url | absURL | safeJS }}";
-        const SITE_BASE = "{{ .Site.BaseURL | safeJS }}";
+        const DATASET_URL = "{{ .Params.dataset_url | relURL | safeJS }}";
+        const SITE_BASE = '{{ "/" | relURL }}';
         // ============================================================
         // CONFIGURATION
         // ============================================================
@@ -2695,11 +2695,11 @@
         const SHAPES = ['circle', 'square', 'diamond', 'triangle'];
         
         const ENCODING_LABELS = [
-            { key: 'grid-x', label: 'Grid X', class: 'encoding-grid-x' },
-            { key: 'grid-y', label: 'Grid Y', class: 'encoding-grid-y' },
+            { key: 'grid-x', label: 'grid X', class: 'encoding-grid-x' },
+            { key: 'grid-y', label: 'grid Y', class: 'encoding-grid-y' },
             { key: 'color', label: 'Color', class: 'encoding-color' },
-            { key: 'panel-x', label: 'grid X', class: 'encoding-panel-x' },
-            { key: 'panel-y', label: 'grid Y', class: 'encoding-panel-y' },
+            { key: 'panel-x', label: 'panel X', class: 'encoding-panel-x' },
+            { key: 'panel-y', label: 'panel Y', class: 'encoding-panel-y' },
             { key: 'shape', label: 'Shape', class: 'encoding-shape' }
         ];
 
