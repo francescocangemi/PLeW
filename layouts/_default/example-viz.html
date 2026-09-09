@@ -2683,7 +2683,7 @@
     
     <script>
         const DATASET_URL = "{{ .Params.dataset_url | relURL | safeJS }}";
-        const SITE_BASE = "{{ .Site.BaseURL | safeJS }}";
+        const SITE_BASE = '{{ "/" | relURL }}';
         // ============================================================
         // CONFIGURATION
         // ============================================================
