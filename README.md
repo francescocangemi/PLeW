@@ -65,6 +65,60 @@ Go to [Hugo releases](https://github.com/gohugoio/hugo/releases), download `hugo
 
 ---
 
+## Sharing your own example dataset
+
+If you have your own data and want collaborators to explore it in PLeW — without them needing to install anything — you can host your own copy of this site and add your dataset as a new example page. Once it's live, you just send collaborators a link.
+
+### Step 1: Get your own copy of PLeW online
+
+1. On GitHub, **fork this repository** into your own GitHub account (button in the top-right of the repo page).
+2. In your fork, go to **Settings → Pages**, and under "Build and deployment", set **Source** to **GitHub Actions**. (This repo already includes the workflow file that builds the site with Hugo — you don't need to write one yourself.)
+3. Push any commit to your fork's **main** branch (even a small one, like editing this README) to trigger the first build. You can watch its progress under the **Actions** tab.
+4. After the build finishes (usually 1–2 minutes), your own PLeW site will be live at:
+   ```
+   https://<your-github-username>.github.io/<your-repo-name>/
+   ```
+   Bookmark this — it's your permanent home for examples going forward.
+
+### Step 2: Add a new example dataset
+
+Each example page is just a CSV file plus a small text file that tells PLeW about it — no coding required.
+
+1. **Prepare your CSV.** Save it as `static/data/<your-dataset-name>.csv`. Column names generally just work as-is: PLeW auto-detects columns like `audio_url`, `image_url`, or `video_url` as media, and columns like `transcript`, `translation`, `gloss`, or `description` as descriptive text (shown in the detail popup rather than plotted). If you want to force a specific column's treatment regardless of its name, prefix the header with:
+   - `dim::` — always treat as a plottable dimension (e.g. `dim::Function`)
+   - `med::` — always treat as media, audio/image/video/YouTube link (e.g. `med::recording`)
+   - `desc::` — always treat as descriptive text, shown in the popup only (e.g. `desc::notes`)
+2. **Add any media files** (audio, image, video) referenced by your CSV into a new folder under `static/`, e.g. `static/<your-dataset-name>/`. In the CSV, reference them with a path relative to `static/`, e.g. `<your-dataset-name>/clip1.wav` — or use a full `https://` link (including YouTube URLs).
+3. **Create the content page.** From a terminal in the project folder, run:
+   ```
+   hugo new content/examples/<your-dataset-name>.md
+   ```
+   Open the new file and remove the `draft = true` line so it will actually publish. Fill in the rest:
+   ```toml
+   +++
+   title = "My Dataset"
+   description = "A short description shown on the example gallery card."
+   dataset_url = "data/<your-dataset-name>.csv"
+   layout = "example-viz"
+   weight = 10
+   date = 2026-01-01
+   +++
+   ```
+   `weight` controls where the page appears in the example gallery (lower numbers first).
+4. **Test locally.** Run `hugo server`, then open `http://localhost:1313/examples/<your-dataset-name>/` and confirm your data loads, your dimensions look right, and any media plays correctly. Adjust column names/prefixes as needed.
+
+### Step 3: Publish and share
+
+1. Commit your changes and push them to your fork (directly to `main`, or via a pull request into your own `main` if you prefer to review first).
+2. Once the changes are on `main`, GitHub Actions automatically rebuilds and redeploys your site — no extra steps needed.
+3. Your new dataset will be live at:
+   ```
+   https://<your-github-username>.github.io/<your-repo-name>/examples/<your-dataset-name>/
+   ```
+4. Share that link directly with collaborators — it opens straight into the visualizer with your dataset already loaded, no upload required.
+
+---
+
 ## Troubleshooting
 
 | Problem | What to try |
