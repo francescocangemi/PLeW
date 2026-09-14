@@ -1,5 +1,6 @@
 +++
 title = "JAP-isaph"
+draft = true
 weight = 6
 description = "JAP-isaph"
 dataset_url = "data/japisaph.csv"
