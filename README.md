@@ -1,5 +1,5 @@
 # PLeW
-(previously betterviz)
+(previously BetterViz)
 
 Interactive multi-dimensional data visualizer. Load CSV data, map dimensions to axes, and explore in a grid of scatter plots.
 
@@ -43,7 +43,7 @@ Go to [Hugo releases](https://github.com/gohugoio/hugo/releases), download `hugo
 1. Open **PowerShell** (Windows key → type “PowerShell”).
 2. Type this (change the path if your project is elsewhere) and press **Enter**:
    ```
-   cd C:\Projects\plew\betterviz
+   cd C:\Projects\PLeW
    ```
 3. The prompt should show that folder. If you see “cannot find path”, check that the path is correct.
 
