@@ -930,6 +930,24 @@
             background: rgba(78, 205, 196, 0.2);
             box-shadow: inset 0 0 0 2px #4ecdc4;
         }
+
+        /* Shown when a cell still has more items than fit even at the
+           smallest auto-scaled dot size, so hidden items read as
+           "scroll for more" instead of silently missing data. */
+        .panel-cell-overflow-badge {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            font-size: 0.55rem;
+            line-height: 1;
+            padding: 1px 4px;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.85);
+            color: #0f1419;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 5;
+        }
         
         /* panel Axis Labels */
         .panel-axis-label {
@@ -965,8 +983,8 @@
         
         /* Data Points */
         .data-point {
-            width: 12px;
-            height: 12px;
+            width: var(--dot-size, 12px);
+            height: var(--dot-size, 12px);
             border-radius: 50%;
             cursor: grab;
             transition: all 0.15s ease;
@@ -1028,9 +1046,9 @@
         .data-point.shape-triangle {
             width: 0;
             height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 12px solid currentColor;
+            border-left: calc(var(--dot-size, 12px) / 2) solid transparent;
+            border-right: calc(var(--dot-size, 12px) / 2) solid transparent;
+            border-bottom: var(--dot-size, 12px) solid currentColor;
             background: transparent !important;
         }
         
@@ -3295,12 +3313,20 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
-            
+
             if (encodings) {
                 updateFloatingLegend(encodings);
             }
         }
-        
+
+        // On narrow screens the 350px sidebar leaves almost no room for the
+        // visualization, so start collapsed there. The toggle button still
+        // works normally; this only affects the initial state on load.
+        const MOBILE_SIDEBAR_BREAKPOINT = 768;
+        if (window.innerWidth <= MOBILE_SIDEBAR_BREAKPOINT) {
+            document.getElementById('sidebar')?.classList.add('collapsed');
+        }
+
         function toggleFloatingLegend() {
             const legend = document.getElementById('floatingLegend');
             const btn = legend.querySelector('.floating-legend-toggle');
@@ -3508,6 +3534,13 @@
             clonedRoot.querySelectorAll('.panel-grid').forEach(el => {
                 el.style.overflow = 'visible';
             });
+
+            // Exports should show every point (no fixed-height clipping),
+            // so the "+N more, scroll" badge doesn't apply to a snapshot.
+            clonedRoot.querySelectorAll('.panel-cell').forEach(el => {
+                el.style.overflow = 'visible';
+            });
+            clonedRoot.querySelectorAll('.panel-cell-overflow-badge').forEach(el => el.remove());
         }
 
         // --- FEATURE: snapshot-plus (start) ---
@@ -5488,6 +5521,7 @@
 
             container.appendChild(wrap);
             container.classList.toggle('show-dimension-names', showDimensionNames);
+            applyAdaptiveDotSizing();
         }
         
         function getOuterPanelRowHeight() {
@@ -5693,10 +5727,95 @@
                 const point = createDataPoint(row, encodings);
                 cell.appendChild(point);
             });
-            
+
             return cell;
         }
-        
+
+        // ============================================================
+        // ADAPTIVE DOT SIZING
+        // Dense panel-cells (e.g. a skewed facet with hundreds of items
+        // in one bucket) default to a single narrow column of 12px dots
+        // that can overflow far past what a fixed-height cell shows.
+        // After each render, shrink dots in crowded cells just enough to
+        // let them wrap into a roughly square cluster; cells that already
+        // fit at the default size are left untouched.
+        // ============================================================
+        const DOT_SIZE_DEFAULT = 12;
+        const DOT_SIZE_FLOOR = 6;
+        const DOT_SIZE_STEP = 0.5;
+        const DOT_GAP = 3; // matches .panel-cell { gap: 3px }
+        const PANEL_CELL_PADDING = 12; // matches .panel-cell { padding: 6px } (both sides)
+
+        function measureCellFit(size, count, width, height) {
+            const cols = Math.max(1, Math.floor((width + DOT_GAP) / (size + DOT_GAP)));
+            const rows = Math.ceil(count / cols);
+            const neededHeight = rows * (size + DOT_GAP) - DOT_GAP;
+            return { ok: neededHeight <= height, cols, rows };
+        }
+
+        function applyAdaptiveDotSizing() {
+            const container = document.getElementById('vizContainer');
+            if (!container) return;
+            const isUnified = container.classList.contains('unified-inner-panels');
+
+            container.querySelectorAll('.panel-cell').forEach(cell => {
+                const existingBadge = cell.querySelector('.panel-cell-overflow-badge');
+                if (existingBadge) existingBadge.remove();
+
+                const count = cell.children.length;
+                if (count === 0) {
+                    cell.style.removeProperty('--dot-size');
+                    return;
+                }
+
+                const width = cell.clientWidth - PANEL_CELL_PADDING;
+                const height = cell.clientHeight - PANEL_CELL_PADDING;
+                if (width <= 0 || height <= 0) return;
+
+                let size = DOT_SIZE_DEFAULT;
+                let fit = measureCellFit(size, count, width, height);
+                if (!fit.ok) {
+                    for (let s = DOT_SIZE_DEFAULT - DOT_SIZE_STEP; s >= DOT_SIZE_FLOOR; s -= DOT_SIZE_STEP) {
+                        const attempt = measureCellFit(s, count, width, height);
+                        size = s;
+                        fit = attempt;
+                        if (attempt.ok) break;
+                    }
+                }
+
+                if (size < DOT_SIZE_DEFAULT) {
+                    cell.style.setProperty('--dot-size', `${size}px`);
+                } else {
+                    cell.style.removeProperty('--dot-size');
+                }
+
+                // Only unified inner panels have a hard-capped, scrollable
+                // height (see .unified-inner-panels .panel-cell overflow:auto);
+                // that's the one case where "doesn't fit" means content is
+                // actually clipped rather than just growing the cell.
+                if (isUnified && !fit.ok) {
+                    const visibleRows = Math.max(1, Math.floor(height / (size + DOT_GAP)));
+                    const visibleCount = Math.min(count, fit.cols * visibleRows);
+                    const hiddenCount = count - visibleCount;
+                    if (hiddenCount > 0) {
+                        const badge = document.createElement('div');
+                        badge.className = 'panel-cell-overflow-badge';
+                        badge.textContent = `+${hiddenCount}`;
+                        badge.title = `${hiddenCount} more item${hiddenCount === 1 ? '' : 's'} — scroll within this cell to see them`;
+                        cell.appendChild(badge);
+                    }
+                }
+            });
+        }
+
+        let dotSizingResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(dotSizingResizeTimer);
+            dotSizingResizeTimer = setTimeout(() => {
+                if (currentData && encodings) applyAdaptiveDotSizing();
+            }, 150);
+        });
+
         function createDataPoint(row, encodings) {
             const point = document.createElement('div');
             point.className = 'data-point';
