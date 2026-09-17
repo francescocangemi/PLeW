@@ -930,6 +930,24 @@
             background: rgba(78, 205, 196, 0.2);
             box-shadow: inset 0 0 0 2px #4ecdc4;
         }
+
+        /* Shown when a cell still has more items than fit even at the
+           smallest auto-scaled dot size, so hidden items read as
+           "scroll for more" instead of silently missing data. */
+        .panel-cell-overflow-badge {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            font-size: 0.55rem;
+            line-height: 1;
+            padding: 1px 4px;
+            border-radius: 8px;
+            background: rgba(78, 205, 196, 0.85);
+            color: #0f1419;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 5;
+        }
         
         /* panel Axis Labels */
         .panel-axis-label {
@@ -965,8 +983,8 @@
         
         /* Data Points */
         .data-point {
-            width: 12px;
-            height: 12px;
+            width: var(--dot-size, 12px);
+            height: var(--dot-size, 12px);
             border-radius: 50%;
             cursor: grab;
             transition: all 0.15s ease;
@@ -1028,9 +1046,9 @@
         .data-point.shape-triangle {
             width: 0;
             height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 12px solid currentColor;
+            border-left: calc(var(--dot-size, 12px) / 2) solid transparent;
+            border-right: calc(var(--dot-size, 12px) / 2) solid transparent;
+            border-bottom: var(--dot-size, 12px) solid currentColor;
             background: transparent !important;
         }
         
@@ -3295,12 +3313,20 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
-            
+
             if (encodings) {
                 updateFloatingLegend(encodings);
             }
         }
-        
+
+        // On narrow screens the 350px sidebar leaves almost no room for the
+        // visualization, so start collapsed there. The toggle button still
+        // works normally; this only affects the initial state on load.
+        const MOBILE_SIDEBAR_BREAKPOINT = 768;
+        if (window.innerWidth <= MOBILE_SIDEBAR_BREAKPOINT) {
+            document.getElementById('sidebar')?.classList.add('collapsed');
+        }
+
         function toggleFloatingLegend() {
             const legend = document.getElementById('floatingLegend');
             const btn = legend.querySelector('.floating-legend-toggle');
@@ -3507,6 +3533,37 @@
 
             clonedRoot.querySelectorAll('.panel-grid').forEach(el => {
                 el.style.overflow = 'visible';
+            });
+
+            // A static image can't be scrolled, so any cell that still
+            // needed the "+N more, scroll" badge on screen (items left
+            // over after the max on-screen stacking overlap) needs to
+            // actually show everything here instead. Grow that whole
+            // grid's row (not just the one cell) so it has room without
+            // squashing or bleeding into sibling cells, then lay that
+            // cell's points out without overlap for a crisp static image.
+            clonedRoot.querySelectorAll('.panel-grid').forEach(grid => {
+                if (!grid.querySelector('.panel-cell-overflow-badge')) return;
+                const rows = grid.style.gridTemplateRows;
+                if (rows) {
+                    grid.style.gridTemplateRows = rows.replace(/repeat\(([^,]+),\s*[\d.]+px\)/, 'repeat($1, auto)');
+                }
+                grid.style.height = 'auto';
+            });
+
+            clonedRoot.querySelectorAll('.panel-cell').forEach(cell => {
+                cell.style.overflow = 'visible';
+                const badge = cell.querySelector('.panel-cell-overflow-badge');
+                if (!badge) return;
+                badge.remove();
+                cell.classList.remove('panel-cell-stacked');
+                cell.style.height = 'auto';
+                cell.querySelectorAll('.data-point').forEach(pt => {
+                    pt.style.position = '';
+                    pt.style.left = '';
+                    pt.style.top = '';
+                    pt.style.zIndex = '';
+                });
             });
         }
 
@@ -5488,6 +5545,7 @@
 
             container.appendChild(wrap);
             container.classList.toggle('show-dimension-names', showDimensionNames);
+            applyAdaptiveDotSizing();
         }
         
         function getOuterPanelRowHeight() {
@@ -5693,10 +5751,181 @@
                 const point = createDataPoint(row, encodings);
                 cell.appendChild(point);
             });
-            
+
             return cell;
         }
-        
+
+        // ============================================================
+        // ADAPTIVE DOT SIZING
+        // Dense panel-cells (e.g. a skewed facet with hundreds of items
+        // in one bucket) default to a single narrow column of 12px dots
+        // that can overflow far past what a fixed-height cell shows.
+        //
+        // Dot size is not an encoded dimension in this tool, so it must
+        // stay visually uniform: exactly one size is computed per render
+        // for the WHOLE chart (the size the most crowded cell needs),
+        // never a different size per cell.
+        //
+        // If a cell still can't fit its items at that shared size (only
+        // possible under unifyInnerPanel's fixed row height), it switches
+        // to a tighter, overlapping "stacked" layout at the same dot size
+        // rather than shrinking further, so dots stay clickable. Anything
+        // left over after the maximum allowed overlap still gets a "+N"
+        // scroll-to-see badge, same as before, just far less often.
+        //
+        // These are plain constants for now (not user-facing) but are
+        // kept as single named knobs so a future sidebar control (saved
+        // to the exported config JSON) can drive them directly.
+        // ============================================================
+        const DOT_SIZE_DEFAULT = 12;
+        const DOT_SIZE_FLOOR = 6;
+        const DOT_SIZE_STEP = 0.5;
+        const DOT_GAP = 3; // matches .panel-cell { gap: 3px }
+        const PANEL_CELL_PADDING = 12; // matches .panel-cell { padding: 6px } (both sides)
+        const MAX_STACK_OVERLAP = 0.65; // max fraction of a dot that may be covered by its neighbor before falling back to the scroll+badge
+        const STACK_PITCH_STEP = 0.5; // px, search granularity when packing a stacked cell
+
+        function measureCellFit(size, count, width, height) {
+            const cols = Math.max(1, Math.floor((width + DOT_GAP) / (size + DOT_GAP)));
+            const rows = Math.ceil(count / cols);
+            const neededHeight = rows * (size + DOT_GAP) - DOT_GAP;
+            return { ok: neededHeight <= height, cols, rows };
+        }
+
+        // Largest dot size (between the floor and the default) at which
+        // this cell's own items fit without any overlap. Used only to find
+        // the one shared size for the whole chart — never applied per-cell.
+        function idealDotSizeForCell(cell) {
+            const count = cell.children.length;
+            if (count === 0) return DOT_SIZE_DEFAULT;
+            const width = cell.clientWidth - PANEL_CELL_PADDING;
+            const height = cell.clientHeight - PANEL_CELL_PADDING;
+            if (width <= 0 || height <= 0) return DOT_SIZE_DEFAULT;
+
+            let size = DOT_SIZE_DEFAULT;
+            if (!measureCellFit(size, count, width, height).ok) {
+                for (let s = DOT_SIZE_DEFAULT - DOT_SIZE_STEP; s >= DOT_SIZE_FLOOR; s -= DOT_SIZE_STEP) {
+                    size = s;
+                    if (measureCellFit(s, count, width, height).ok) break;
+                }
+            }
+            return size;
+        }
+
+        // Packs `count` dots of a fixed `dotSize` into `width`x`height`,
+        // starting from normal (non-overlapping) spacing and tightening
+        // the pitch only as far as MAX_STACK_OVERLAP allows.
+        function packCellStacked(count, width, height, dotSize) {
+            const maxPitch = dotSize + DOT_GAP;
+            const minPitch = Math.max(1, dotSize * (1 - MAX_STACK_OVERLAP));
+
+            let best = null;
+            for (let pitch = maxPitch; pitch >= minPitch; pitch -= STACK_PITCH_STEP) {
+                const cols = Math.max(1, Math.floor(width / pitch));
+                const rows = Math.ceil(count / cols);
+                const neededHeight = (rows - 1) * pitch + dotSize;
+                best = { pitch, cols, neededHeight };
+                if (neededHeight <= height) break; // loosest packing that still fits everything
+            }
+            return best;
+        }
+
+        // Lays every point out at fixed (col, row) offsets of `pack.pitch`,
+        // overlapping when the pitch is tighter than the dot size. All
+        // items are positioned (even ones below the visible fold) so the
+        // cell's existing overflow:auto scroll still reaches every point;
+        // the badge just flags that scrolling is needed for the rest.
+        function applyStackedLayout(cell, count, height, dotSize, pack) {
+            cell.classList.add('panel-cell-stacked');
+            [...cell.children].forEach((pt, i) => {
+                const col = i % pack.cols;
+                const row = Math.floor(i / pack.cols);
+                pt.style.position = 'absolute';
+                pt.style.left = `${col * pack.pitch}px`;
+                pt.style.top = `${row * pack.pitch}px`;
+                pt.style.zIndex = String(i + 1);
+            });
+
+            if (pack.neededHeight > height) {
+                const visibleRows = Math.max(1, Math.floor((height - dotSize) / pack.pitch) + 1);
+                const visibleCount = Math.min(count, pack.cols * visibleRows);
+                const hiddenCount = count - visibleCount;
+                if (hiddenCount > 0) {
+                    const badge = document.createElement('div');
+                    badge.className = 'panel-cell-overflow-badge';
+                    badge.textContent = `+${hiddenCount}`;
+                    badge.title = `${hiddenCount} more item${hiddenCount === 1 ? '' : 's'} — scroll within this cell to see them`;
+                    cell.appendChild(badge);
+                }
+            }
+        }
+
+        function applyAdaptiveDotSizing() {
+            const container = document.getElementById('vizContainer');
+            if (!container) return;
+            const isUnified = container.classList.contains('unified-inner-panels');
+
+            // Clear anything a previous render left behind before
+            // recomputing, so stale sizes/positions never linger.
+            container.querySelectorAll('.panel-cell-overflow-badge').forEach(el => el.remove());
+            container.querySelectorAll('.panel-cell').forEach(cell => {
+                cell.classList.remove('panel-cell-stacked');
+                cell.style.removeProperty('--dot-size');
+                [...cell.children].forEach(pt => {
+                    pt.style.position = '';
+                    pt.style.left = '';
+                    pt.style.top = '';
+                    pt.style.zIndex = '';
+                });
+            });
+
+            const cells = [...container.querySelectorAll('.panel-cell')].filter(c => c.children.length > 0);
+            if (cells.length === 0) {
+                container.style.removeProperty('--dot-size');
+                return;
+            }
+
+            // Pass 1: one dot size for the entire chart — whatever the
+            // single most crowded cell needs — applied on the container
+            // so it cascades uniformly to every dot via CSS inheritance.
+            let globalSize = DOT_SIZE_DEFAULT;
+            cells.forEach(cell => {
+                globalSize = Math.min(globalSize, idealDotSizeForCell(cell));
+            });
+            if (globalSize < DOT_SIZE_DEFAULT) {
+                container.style.setProperty('--dot-size', `${globalSize}px`);
+            } else {
+                container.style.removeProperty('--dot-size');
+            }
+
+            // Pass 2: only unified inner panels have a hard-capped,
+            // scrollable height (see .unified-inner-panels .panel-cell
+            // overflow:auto) — that's the one case where "doesn't fit"
+            // means content is actually clipped rather than just growing
+            // the cell, so it's the only case that needs stacking.
+            if (!isUnified) return;
+
+            cells.forEach(cell => {
+                const count = cell.children.length;
+                const width = cell.clientWidth - PANEL_CELL_PADDING;
+                const height = cell.clientHeight - PANEL_CELL_PADDING;
+                if (width <= 0 || height <= 0) return;
+
+                if (measureCellFit(globalSize, count, width, height).ok) return;
+
+                const pack = packCellStacked(count, width, height, globalSize);
+                applyStackedLayout(cell, count, height, globalSize, pack);
+            });
+        }
+
+        let dotSizingResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(dotSizingResizeTimer);
+            dotSizingResizeTimer = setTimeout(() => {
+                if (currentData && encodings) applyAdaptiveDotSizing();
+            }, 150);
+        });
+
         function createDataPoint(row, encodings) {
             const point = document.createElement('div');
             point.className = 'data-point';
