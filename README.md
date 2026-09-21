@@ -73,7 +73,7 @@ If you have your own data and want collaborators to explore it in PLeW — witho
 
 1. On GitHub, **fork this repository** into your own GitHub account (button in the top-right of the repo page).
 2. In your fork, go to **Settings → Pages**, and under "Build and deployment", set **Source** to **GitHub Actions**. (This repo already includes the workflow file that builds the site with Hugo — you don't need to write one yourself.)
-3. Push any commit to your fork's **main** branch (even a small one, like editing this README) to trigger the first build. You can watch its progress under the **Actions** tab.
+3. Push any commit to your fork's **main** branch (even a small one, like editing this README) (done!) to trigger the first build. You can watch its progress under the **Actions** tab.
 4. After the build finishes (usually 1–2 minutes), your own PLeW site will be live at:
    ```
    https://<your-github-username>.github.io/<your-repo-name>/
