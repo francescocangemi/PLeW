@@ -1,4 +1,4 @@
-﻿desc::participant,desc::TOEIC,language,desc::type,desc::source,desc::ListNumber,desc::SentenceNumber,desc::sentence,desc::NumberOfContentWords,desc::noise,condition,audio_url,score,desc::PercepTest
+﻿participant,TOEIC,language,type,desc::source,desc::ListNumber,desc::SentenceNumber,desc::sentence,desc::NumberOfContentWords,desc::noise,condition,audio_url,score,PercepTest
 1,500,japanese,sentence,SpeechBoxHINTList,1,1,朝ご飯を食べて元気に出かけた,4,yes,SNR0dB,https://www.francescocangemi.com/nem/J_HT1_1_0db.wav,99,yes
 1,500,japanese,sentence,SpeechBoxHINTList,1,3,音楽に合わせて楽しく踊る,4,yes,SNR0dB,https://www.francescocangemi.com/nem/J_HT1_3_0db.wav,99,yes
 1,500,japanese,sentence,SpeechBoxHINTList,1,5,歯磨きを忘れると虫歯になる,4,yes,SNR0dB,https://www.francescocangemi.com/nem/J_HT1_5_0db.wav,99,yes
