@@ -99,6 +99,7 @@ Each example page is just a CSV file plus a small text file that tells PLeW abou
    title = "My Dataset"
    description = "A short description shown on the example gallery card."
    dataset_url = "data/<your-dataset-name>.csv"
+   config_url = "data/<your-json-config-filename>.json"
    layout = "example-viz"
    weight = 10
    date = 2026-01-01
