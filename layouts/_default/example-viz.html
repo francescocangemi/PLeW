@@ -2701,6 +2701,7 @@
     
     <script>
         const DATASET_URL = "{{ .Params.dataset_url | relURL | safeJS }}";
+        const CONFIG_URL = {{ if .Params.config_url }}"{{ .Params.config_url | relURL | safeJS }}"{{ else }}null{{ end }};
         const SITE_BASE = '{{ "/" | relURL }}';
         // ============================================================
         // CONFIGURATION
@@ -3077,6 +3078,25 @@
             showVizConfigNotice._timer = setTimeout(() => {
                 el.style.display = 'none';
             }, 5000);
+        }
+
+        function loadPreCalibratedConfig(url) {
+            return fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error('Config load failed: ' + r.status);
+                    return r.json();
+                })
+                .then(config => {
+                    const applied = applyVisualizationConfig(config, { silent: true });
+                    if (applied) {
+                        showVizConfigNotice('Pre-calibrated setup loaded.');
+                    } else {
+                        console.error('config_url did not point to a valid PLeW visualization setup file.');
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load pre-calibrated config:', err);
+                });
         }
         // --- FEATURE: viz-config-io (end) ---
         
@@ -6759,7 +6779,10 @@
                 if (!r.ok) throw new Error('Dataset load failed: ' + r.status);
                 return r.text();
             })
-            .then(text => processDataFile(text, DATASET_URL))
+            .then(text => {
+                processDataFile(text, DATASET_URL);
+                if (CONFIG_URL) loadPreCalibratedConfig(CONFIG_URL);
+            })
             .catch(err => {
                 console.error(err);
                 const errDiv = document.createElement('div');
