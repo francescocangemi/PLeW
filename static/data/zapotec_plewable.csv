@@ -1,0 +1,37 @@
+﻿ID,place,manner,force,pair,position,audio,desc::symbol,desc::example,desc::translation
+1,05 - postalveolar,5 - fricative,lenis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/001a.wav,zh,zhi:la,cotton
+2,05 - postalveolar,6 - affricate,lenis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/002a.wav,dx,dxi:la,comal
+3,04 - alveolar,5 - fricative,lenis,3,2 - medial,www.francescocangemi.com/icphs2027/nepo/003a.wav,z,wala:za,portion
+4,04 - alveolar,6 - affricate,lenis,3,2 - medial,www.francescocangemi.com/icphs2027/nepo/004a.wav,dz,wala:dza,aboriginal
+5,04 - alveolar,2 - nasal,lenis,1,2 - medial,www.francescocangemi.com/icphs2027/nepo/005a.wav,n,ru:na7,I do
+6,04 - alveolar,2 - nasal,fortis,1,2 - medial,www.francescocangemi.com/icphs2027/nepo/006a.wav,nn,runna7,I give
+7,04 - alveolar,2 - nasal,lenis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/007a.wav,n,txi:nu,fifteen
+8,04 - alveolar,2 - nasal,fortis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/008a.wav,nn,txinnu,twelve
+9,04 - alveolar,2 - nasal,lenis,3,1 - initial,www.francescocangemi.com/icphs2027/nepo/009a.wav,n,na7a,is placed
+10,04 - alveolar,2 - nasal,fortis,3,1 - initial,www.francescocangemi.com/icphs2027/nepo/010a.wav,nn,nna7a,now
+11,04 - alveolar,4 - tap,lenis,7,1 - initial,www.francescocangemi.com/icphs2027/nepo/011a.wav,r,ratxi7,scoop up water
+12,04 - alveolar,8 - lateral,lenis,7,1 - initial,www.francescocangemi.com/icphs2027/nepo/012a.wav,l,latxi7,valley
+13,04 - alveolar,8 - lateral,lenis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/013a.wav,l,ra:la,ripe
+14,04 - alveolar,8 - lateral,fortis,2,2 - medial,www.francescocangemi.com/icphs2027/nepo/014a.wav,ll,ralla,gets dark
+15,04 - alveolar,8 - lateral,lenis,3,1 - initial,www.francescocangemi.com/icphs2027/nepo/015a.wav,l,latxi7,valley
+16,04 - alveolar,8 - lateral,fortis,3,1 - initial,www.francescocangemi.com/icphs2027/nepo/016a.wav,ll,llatxi,beautiful
+17,04 - alveolar,8 - lateral,lenis,4,1 - initial,www.francescocangemi.com/icphs2027/nepo/017a.wav,l,lë:nu,her name is
+18,04 - alveolar,8 - lateral,fortis,4,1 - initial,www.francescocangemi.com/icphs2027/nepo/018a.wav,ll,llë:nu,she
+19,04 - alveolar,8 - lateral,lenis,5,1 - initial,www.francescocangemi.com/icphs2027/nepo/019a.wav,l,rlë:bi,permit
+20,04 - alveolar,8 - lateral,fortis,5,1 - initial,www.francescocangemi.com/icphs2027/nepo/020a.wav,ll,rllë:bi,boil
+21,04 - alveolar,8 - lateral,lenis,6,1 - initial,www.francescocangemi.com/icphs2027/nepo/021a.wav,l,gla7a,broke
+22,04 - alveolar,8 - lateral,fortis,6,1 - initial,www.francescocangemi.com/icphs2027/nepo/022a.wav,ll,glla7a,broke (it)
+23,11 - glottal,1 - plosive,fortis,1,3 - final,www.francescocangemi.com/icphs2027/nepo/023a.wav,Ø,gya,metal
+24,11 - glottal,1 - plosive,fortis,1,3 - final,www.francescocangemi.com/icphs2027/nepo/024a.wav,7,gya7,dried grass
+25,11 - glottal,1 - plosive,fortis,2,3 - final,www.francescocangemi.com/icphs2027/nepo/025a.wav,Ø,bïku,stink bug
+26,11 - glottal,1 - plosive,fortis,2,3 - final,www.francescocangemi.com/icphs2027/nepo/026a.wav,7,bïku7,dog
+27,11 - glottal,1 - plosive,fortis,3,3 - final,www.francescocangemi.com/icphs2027/nepo/027a.wav,Ø,ya:ga,tree
+28,11 - glottal,1 - plosive,fortis,3,3 - final,www.francescocangemi.com/icphs2027/nepo/028a.wav,7,yagá7,jonote tree
+29,11 - glottal,1 - plosive,fortis,4,2 - medial,www.francescocangemi.com/icphs2027/nepo/029a.wav,Ø,bï:dxi,chilli seed
+30,11 - glottal,1 - plosive,fortis,4,2 - medial,www.francescocangemi.com/icphs2027/nepo/030a.wav,7,bï7dxí7,southern wind
+31,11 - glottal,1 - plosive,fortis,5,2 - medial,www.francescocangemi.com/icphs2027/nepo/031a.wav,Ø,txinnu,twelve
+32,11 - glottal,1 - plosive,fortis,5,2 - medial,www.francescocangemi.com/icphs2027/nepo/032a.wav,7,txi7nnu,thirteen
+33,04 - alveolar,6 - affricate,lenis,4,2 - medial,www.francescocangemi.com/icphs2027/nepo/033a.wav,dx,bï:dxi,chilli seed
+34,04 - alveolar,6 - affricate,fortis,4,2 - medial,www.francescocangemi.com/icphs2027/nepo/034a.wav,tx,bïtxi,foam
+35,04 - alveolar,5 - fricative,lenis,1,1 - initial,www.francescocangemi.com/icphs2027/nepo/035a.wav,z,za7a,corn
+36,04 - alveolar,5 - fricative,fortis,1,1 - initial,www.francescocangemi.com/icphs2027/nepo/036a.wav,s,sa7a,will be completed
